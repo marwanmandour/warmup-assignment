@@ -6,9 +6,41 @@ const fs = require("fs");
 // endTime: (typeof string) formatted as hh:mm:ss am or hh:mm:ss pm
 // Returns: string formatted as h:mm:ss
 // ============================================================
+
 function getShiftDuration(startTime, endTime) {
-    // TODO: Implement this function
+    function toSeconds(timeStr) {
+        let [time, modifier] = timeStr.split(" ");
+        let [hours, minutes, seconds] = time.split(":").map(Number);
+
+        if (modifier.toLowerCase() === "pm" && hours !== 12) {
+            hours += 12;
+        }
+        if (modifier.toLowerCase() === "am" && hours === 12) {
+            hours = 0;
+        }
+
+        return hours * 3600 + minutes * 60 + seconds;
+    }
+
+    let startSec = toSeconds(startTime);
+    let endSec = toSeconds(endTime);
+
+    if (endSec < startSec) {
+        endSec += 24 * 3600;
+    }
+
+    let diff = endSec - startSec;
+
+    let hours = Math.floor(diff / 3600);
+    let minutes = Math.floor((diff % 3600) / 60);
+    let seconds = diff % 60;
+
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
+
+
+console.log(getShiftDuration("09:15:30 am", "05:45:15 pm"));
+console.log(getShiftDuration("10:00:00 pm", "06:00:00 am")); }
 
 // ============================================================
 // Function 2: getIdleTime(startTime, endTime)
@@ -16,8 +48,40 @@ function getShiftDuration(startTime, endTime) {
 // endTime: (typeof string) formatted as hh:mm:ss am or hh:mm:ss pm
 // Returns: string formatted as h:mm:ss
 // ============================================================
+
 function getIdleTime(startTime, endTime) {
-    // TODO: Implement this function
+    function toSeconds(timeStr) {
+        let [time, modifier] = timeStr.split(" ");
+        let [hours, minutes, seconds] = time.split(":").map(Number);
+
+        if (modifier.toLowerCase() === "pm" && hours !== 12) {
+            hours += 12;
+        }
+        if (modifier.toLowerCase() === "am" && hours === 12) {
+            hours = 0;
+        }
+
+        return hours * 3600 + minutes * 60 + seconds;
+    }
+
+    let startSec = toSeconds(startTime);
+    let endSec = toSeconds(endTime);
+
+    if (endSec < startSec) {
+        endSec += 24 * 3600;
+    }
+
+    let diff = endSec - startSec;
+
+    let hours = Math.floor(diff / 3600);
+    let minutes = Math.floor((diff % 3600) / 60);
+    let seconds = diff % 60;
+
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+}
+
+console.log(getIdleTime("05:45:15 pm", "09:15:30 am")); 
+console.log(getIdleTime("12:00:00 pm", "01:30:00 pm")); 
 }
 
 // ============================================================
