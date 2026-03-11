@@ -110,7 +110,21 @@ function addShiftRecord(textFile,shiftObj){
 // Returns: nothing (void)
 // ============================================================
 function setBonus(textFile, driverID, date, newValue) {
-    // TODO: Implement this function
+
+    let data = fs.readFileSync(textFile, "utf8").trim();
+    let lines = data.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+
+        let parts = lines[i].split(",");
+
+        if (parts[0] === driverID && parts[1] === date) {
+            parts[8] = newValue;
+            lines[i] = parts.join(",");
+        }
+    }
+
+    fs.writeFileSync(textFile, lines.join("\n"));
 }
 
 // ============================================================
@@ -121,7 +135,32 @@ function setBonus(textFile, driverID, date, newValue) {
 // Returns: number (-1 if driverID not found)
 // ============================================================
 function countBonusPerMonth(textFile, driverID, month) {
-    // TODO: Implement this function
+
+    let data = fs.readFileSync(textFile, "utf8").trim();
+    let lines = data.split("\n");
+
+    let found = false;
+    let count = 0;
+
+    for (let line of lines) {
+
+        let parts = line.split(",");
+
+        if (parts[0] === driverID) {
+
+            found = true;
+
+            let m = new Date(parts[1]).getMonth() + 1;
+
+            if (m === month && parts[8] === "true") {
+                count++;
+            }
+        }
+    }
+
+    if (!found) return -1;
+
+    return count;
 }
 
 // ============================================================
@@ -132,7 +171,27 @@ function countBonusPerMonth(textFile, driverID, month) {
 // Returns: string formatted as hhh:mm:ss
 // ============================================================
 function getTotalActiveHoursPerMonth(textFile, driverID, month) {
-    // TODO: Implement this function
+
+    let data = fs.readFileSync(textFile, "utf8").trim();
+    let lines = data.split("\n");
+
+    let total = 0;
+
+    for (let line of lines) {
+
+        let parts = line.split(",");
+
+        if (parts[0] === driverID) {
+
+            let m = new Date(parts[1]).getMonth() + 1;
+
+            if (m === month) {
+                total += parseInt(parts[6]);
+            }
+        }
+    }
+
+    return total;
 }
 
 // ============================================================
@@ -145,7 +204,33 @@ function getTotalActiveHoursPerMonth(textFile, driverID, month) {
 // Returns: string formatted as hhh:mm:ss
 // ============================================================
 function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, month) {
-    // TODO: Implement this function
+
+    let required = 0;
+
+    let data = fs.readFileSync(textFile, "utf8").trim();
+    let lines = data.split("\n");
+
+    for (let line of lines) {
+
+        let parts = line.split(",");
+
+        if (parts[0] === driverID) {
+
+            let date = new Date(parts[1]);
+            let m = date.getMonth() + 1;
+
+            if (m === month) {
+
+                let quota = metQuota(parts[1], 999) ? 504 : 360;
+
+                required += quota;
+            }
+        }
+    }
+
+    required -= bonusCount * 60;
+
+    return required;
 }
 
 // ============================================================
@@ -157,7 +242,28 @@ function getRequiredHoursPerMonth(textFile, rateFile, bonusCount, driverID, mont
 // Returns: integer (net pay)
 // ============================================================
 function getNetPay(driverID, actualHours, requiredHours, rateFile) {
-    // TODO: Implement this function
+
+    let data = fs.readFileSync(rateFile, "utf8").trim();
+    let lines = data.split("\n");
+
+    let rate = 0;
+
+    for (let line of lines) {
+
+        let parts = line.split(",");
+
+        if (parts[0] === driverID) {
+            rate = parseFloat(parts[1]);
+        }
+    }
+
+    if (actualHours >= requiredHours) {
+        return actualHours * rate;
+    }
+
+    let missing = requiredHours - actualHours;
+
+    return (actualHours * rate) - (missing * rate);
 }
 
 module.exports = {
