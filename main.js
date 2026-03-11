@@ -6,18 +6,36 @@ const fs = require("fs");
 // endTime: (typeof string) formatted as hh:mm:ss am or hh:mm:ss pm
 // Returns: string formatted as h:mm:ss
 // ============================================================
-function getShiftDuration(startTime, endTime) {
-    // TODO: Implement this function
+ function getShiftDuration(startTime, endTime){
+    let [sh, sm] = startTime.split(":").map(Number);
+    let [eh, em] = endTime.split(":").map(Number);
+
+    let start = sh*60 + sm;
+    let end = eh*60 + em;
+
+    return end - start;
 }
 
-// ============================================================
-// Function 2: getIdleTime(startTime, endTime)
-// startTime: (typeof string) formatted as hh:mm:ss am or hh:mm:ss pm
-// endTime: (typeof string) formatted as hh:mm:ss am or hh:mm:ss pm
-// Returns: string formatted as h:mm:ss
-// ============================================================
-function getIdleTime(startTime, endTime) {
-    // TODO: Implement this function
+
+function getIdleTime(startTime,endTime){
+    const START = 8*60;
+    const END = 22*60;
+
+    let [sh,sm] = startTime.split(":").map(Number);
+    let [eh,em] = endTime.split(":").map(Number);
+
+    let start = sh*60+sm;
+    let end = eh*60+em;
+
+    let idle = 0;
+
+    if(start < START)
+        idle += Math.min(end,START) - start;
+
+    if(end > END)
+        idle += end - Math.max(start,END);
+
+    return idle;
 }
 
 // ============================================================
@@ -26,8 +44,8 @@ function getIdleTime(startTime, endTime) {
 // idleTime: (typeof string) formatted as h:mm:ss
 // Returns: string formatted as h:mm:ss
 // ============================================================
-function getActiveTime(shiftDuration, idleTime) {
-    // TODO: Implement this function
+function getActiveTime(shiftDuration,idleTime){
+    return shiftDuration - idleTime;
 }
 
 // ============================================================
@@ -36,8 +54,19 @@ function getActiveTime(shiftDuration, idleTime) {
 // activeTime: (typeof string) formatted as h:mm:ss
 // Returns: boolean
 // ============================================================
-function metQuota(date, activeTime) {
-    // TODO: Implement this function
+function metQuota(date,activeTime){
+
+    let d = new Date(date);
+
+    let eidStart = new Date("2025-04-10");
+    let eidEnd = new Date("2025-04-30");
+
+    let quota = 504;
+
+    if(d >= eidStart && d <= eidEnd)
+        quota = 360;
+
+    return activeTime >= quota;
 }
 
 // ============================================================
@@ -46,8 +75,30 @@ function metQuota(date, activeTime) {
 // shiftObj: (typeof object) has driverID, driverName, date, startTime, endTime
 // Returns: object with 10 properties or empty object {}
 // ============================================================
-function addShiftRecord(textFile, shiftObj) {
-    // TODO: Implement this function
+const fs = require("fs");
+
+function addShiftRecord(textFile,shiftObj){
+
+    let data = fs.readFileSync(textFile,"utf8");
+
+    let lines = data.split("\n");
+
+    // check duplicates
+    for(let line of lines){
+        if(line.includes(shiftObj.driverID) && line.includes(shiftObj.date))
+            return false;
+    }
+
+    let duration = getShiftDuration(shiftObj.startTime,shiftObj.endTime);
+    let idle = getIdleTime(shiftObj.startTime,shiftObj.endTime);
+    let active = getActiveTime(duration,idle);
+    let quota = metQuota(shiftObj.date,active);
+
+    let record = `${shiftObj.driverID},${shiftObj.date},${shiftObj.startTime},${shiftObj.endTime},${duration},${idle},${active},${quota}`;
+
+    fs.writeFileSync(textFile,data+"\n"+record);
+
+    return true;
 }
 
 // ============================================================
